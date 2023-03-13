@@ -1,0 +1,101 @@
+databases:
+  - name: anifi-db-staging
+    region: singapore
+    # databaseName: defaultdb
+    # user: admin
+    postgresMajorVersion: 14
+    plan: starter
+    # ipAllowList: [] # only allow internal connections
+    # ipAllowList: # optional (defaults to allow all)
+    #   - source: 203.0.113.4/30
+    #     description: office
+    #   - source: 198.51.100.1
+    #     description: home
+
+services:
+
+# A static site
+  - type: web
+    name: drf-anifi-static-staging
+    env: static
+    buildCommand: ./collectstatic.sh
+    staticPublishPath: ./staticfiles
+    # pullRequestPreviewsEnabled: true # optional
+    # headers:
+    #   - path: /*
+    #     name: X-Frame-Options
+    #     value: sameorigin
+    # routes:
+    #   - type: redirect
+    #     source: /static
+    #     destination: /
+    #   - type: rewrite
+    #     source: /a/*
+    #     destination: /a
+
+  - type: web
+    name: drf-anifi-staging
+    env: docker
+    # repo: https://github.com/render-examples/webdis.git # optional
+    region: singapore
+    plan: starter
+    branch: staging
+    # buildCommand: "./build.sh"
+    # startCommand: "gunicorn app.wsgi:application --bind 0.0.0.0:8080"
+    # dockerCommand: ./webdis.sh # optional (defaults to Dockerfile command)
+    numInstances: 1 # optional (defaults to 1)
+    # scaling:
+    #   minInstances: 1
+    #   maxInstances: 3
+    #   targetMemoryPercent: 60 # optional if targetCPUPercent is set (valid: 1-90)
+    #   targetCPUPercent: 60 # optional if targetMemory is set (valid: 1-90)
+    healthCheckPath: /health
+    # domains:
+    #   - test0.render.com
+    #   - test1.render.com
+    envVars:
+      - key: DEBUG
+        value: FALSE
+      - key: PYTHON_VERSION
+        value: 3.10.4
+      - key: DATABASE_URL
+        fromDatabase:
+          name: anifi-db-staging
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: ALLOWED_HOSTS
+        value: '*'
+      - key: PORT
+        value: 8080
+      - key: SYNCDB_URL
+        value: https://fastapi-syncdb-anifi-staging.onrender.com/
+      - key: SENTRY_DSN
+        value: https://82b4a331ac3b45d4999f93f7e609ddc6@o504186.ingest.sentry.io/6535425
+      - key: STATIC_URL_RENDER
+        value: https://drf-anifi-static-staging.onrender.com
+# envVarGroups:
+#   - name: anifi-dev-settings
+#     envVars:
+#       - key: DEBUG
+#         value: FALSE
+#       - key: DATABASE_URL
+#         value: 
+#       - key: CONCURRENCY
+#         value: 4
+#       - key: SECRET
+#         sync: false
+#       - key: ALLOWED_HOSTS
+#         value: '*'
+#       - key: MORALIS_APP_ID
+#         value: bkpVmQ7TizNK7XnGESGMwK7SW7IBNv5eTbL5QmIx
+#       - key: MORALIS_URL
+#         value: https://lyjcrccmmwvu.usemoralis.com:2053/server
+#       - key: SYNC_EVERY_SECS
+#         value: 3
+#       - key: TABLE_TRANSFER_BATCH
+#         value: TransferBatch
+#       - key: TABLE_TRANSFER_SINGLE
+#         value: TransferSingle
